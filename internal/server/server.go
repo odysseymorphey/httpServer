@@ -3,15 +3,16 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/nats-io/stan.go"
-	"github.com/odysseymorphey/httpServer/internal/database"
-	"github.com/odysseymorphey/httpServer/internal/model"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/nats-io/stan.go"
+	"github.com/odysseymorphey/httpServer/internal/database"
+	"github.com/odysseymorphey/httpServer/internal/model"
 )
 
 type Server struct {
@@ -80,6 +81,7 @@ func (s *Server) beginRouting() error {
 	}
 
 	s.router.HandleFunc("/", s.mock)
+	s.router.HandleFunc("/tmpl", s.testHandler)
 	s.router.Get("/order/{order_id}", s.handleGetOrder)
 
 	err := s.server.ListenAndServe()
