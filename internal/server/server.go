@@ -1,6 +1,8 @@
 package server
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/nats-io/stan.go"
 	"github.com/odysseymorphey/httpServer/internal/database"
@@ -21,10 +23,7 @@ type Server struct {
 func NewServer() (*Server, error) {
 	mux := chi.NewRouter()
 
-	db, err := database.NewDB()
-	if err != nil {
-		return nil, err
-	}
+	db := database.NewDB()
 
 	server := &Server{
 		router: mux,
@@ -32,22 +31,96 @@ func NewServer() (*Server, error) {
 		cache:  make(map[string]model.Order),
 	}
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("TESTING"))
-	})
-
 	return server, nil
 }
 
-func (s *Server) Run() {
+func (s *Server) Run() error {
+	err := s.setCache()
+	if err != nil {
+		return err
+	}
+
+	err = s.connectToStream()
+	if err != nil {
+		return err
+	}
+
+	if err = s.beginRouting(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) beginRouting() error {
 	s.server = &http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: s.router,
 	}
+	s.router.HandleFunc("/", s.mock)
 
 	err := s.server.ListenAndServe()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
+	return nil
+}
+
+func (s *Server) setCache() error {
+	orders := make([]model.Order, 0)
+
+	err := s.db.DB.Model(&orders).Select()
+	if err != nil {
+		return nil
+	}
+
+	for _, order := range orders {
+		s.cache[order.OrderUid] = order
+	}
+
+	return nil
+}
+
+func (s *Server) connectToStream() error {
+	sc, err := stan.Connect("test-cluster", "subscriber", stan.NatsURL("localhost:4222"))
+	if err != nil {
+		return err
+	}
+
+	sub, err := sc.Subscribe("addNewOrder", s.handleRequest)
+	if err != nil {
+		return err
+	}
+
+	s.sc, s.sub = sc, sub
+
+	return nil
+}
+
+func (s *Server) handleRequest(m *stan.Msg) {
+	data := model.Order{}
+	err := json.Unmarshal(m.Data, &data)
+	if err != nil {
+		return
+	}
+
+	if ok := s.addToCache(data); ok {
+		log.Print("Added to cache")
+		s.db.AddOrder(data)
+	}
+}
+
+func (s *Server) addToCache(data model.Order) bool {
+	_, ok := s.cache[data.OrderUid]
+	if ok {
+		return false
+	}
+
+	s.cache[data.OrderUid] = data
+	for key := range s.cache {
+		fmt.Printf("%s ", key)
+	}
+	fmt.Println()
+	return true
 }

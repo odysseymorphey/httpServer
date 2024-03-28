@@ -4,7 +4,7 @@ build:
 
 .PHONY: run
 run:
-	./server --config ./config.yaml
+	./server #--config ./config.yaml
 
 .PHONY: clean
 clean:

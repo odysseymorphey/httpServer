@@ -11,5 +11,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv.Run()
+	err = srv.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

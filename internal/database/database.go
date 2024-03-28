@@ -2,33 +2,32 @@ package database
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/go-pg/pg"
+	"github.com/odysseymorphey/httpServer/internal/model"
 )
 
-var dsn = "postgres://wildberry:wildpass@localhost:5432/wilddb"
-
 type DB struct {
-	db     *pgxpool.Pool
+	DB     *pg.DB
 	cancel context.CancelFunc
 }
 
-func NewDB() (*DB, error) {
+func NewDB() *DB {
 	db := &DB{}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	db.cancel = cancel
+	db.DB = pg.Connect(&pg.Options{
+		User:     "wildberry",
+		Password: "wildpass",
+		Database: "wilddb",
+	})
 
-	conn, err := pgxpool.New(ctx, dsn)
+	return db
+}
+
+func (db *DB) AddOrder(order model.Order) error {
+	_, err := db.DB.Model(&order).Insert()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = conn.Ping(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	db.db = conn
-
-	return db, nil
+	return nil
 }
