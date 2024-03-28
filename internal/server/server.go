@@ -9,6 +9,9 @@ import (
 	"github.com/odysseymorphey/httpServer/internal/model"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type Server struct {
@@ -45,6 +48,18 @@ func (s *Server) Run() error {
 		return err
 	}
 
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	go func() {
+		select {
+		case <-sig:
+		}
+
+		s.Stop()
+		os.Exit(0)
+	}()
+
 	if err = s.beginRouting(); err != nil {
 		return err
 	}
@@ -52,12 +67,20 @@ func (s *Server) Run() error {
 	return nil
 }
 
+func (s *Server) Stop() {
+	s.db.Close()
+	s.sub.Unsubscribe()
+	s.sc.Close()
+}
+
 func (s *Server) beginRouting() error {
 	s.server = &http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: s.router,
 	}
+
 	s.router.HandleFunc("/", s.mock)
+	s.router.Get("/order/{order_id}", s.handleGetOrder)
 
 	err := s.server.ListenAndServe()
 	if err != nil {

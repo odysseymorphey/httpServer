@@ -4,7 +4,15 @@ build:
 
 .PHONY: run
 run:
-	./server #--config ./config.yaml
+	./server
+
+.PHONY: pub
+pub:
+	go run cmd/publisher/main.go ./model.json
+
+.PHONY: migrate
+migrate:
+	go run cmd/migrations/main.go
 
 .PHONY: clean
 clean:
