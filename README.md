@@ -14,7 +14,7 @@ make run
 Сводка по Makefile:
 ```text
 make - сбилдит проект
-make run - запустит проект
+make run - запустит сервер
 make migrate - создаст таблицу в бд
-make pub - отправит сообщение в NATS Streaming
+make pub - отправит сообщение в NATS Streaming()
 ```
