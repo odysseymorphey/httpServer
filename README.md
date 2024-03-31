@@ -16,5 +16,5 @@ make run
 make - сбилдит проект
 make run - запустит сервер
 make migrate - создаст таблицу в бд
-make pub - отправит сообщение в NATS Streaming()
+make pub - отправит сообщение в NATS Streaming(если запущен сервер, то данные запишутся в бд)
 ```
