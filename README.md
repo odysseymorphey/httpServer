@@ -1,4 +1,6 @@
-# NATS Streaming
+# NATS Streaming with Go
+
+`ДЛЯ РАБОТЫ НЕОБХОДИМ ЗАПУЩЕННЫЙ NATS STREAMING SERVER`
 
 Инструкция:
 
@@ -8,6 +10,7 @@ cd httpServer
 make
 make run 
 ```
+
 Сводка по Makefile:
 ```text
 make - сбилдит проект
