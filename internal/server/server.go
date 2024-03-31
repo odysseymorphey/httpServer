@@ -80,8 +80,7 @@ func (s *Server) beginRouting() error {
 		Handler: s.router,
 	}
 
-	s.router.HandleFunc("/", s.mock)
-	s.router.HandleFunc("/tmpl", s.testHandler)
+	s.router.HandleFunc("/", s.indexHandler)
 	s.router.Get("/order/{order_id}", s.handleGetOrder)
 
 	err := s.server.ListenAndServe()

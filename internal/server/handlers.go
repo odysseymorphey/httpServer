@@ -14,7 +14,7 @@ func (s *Server) mock(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, s.cache)
 }
 
-func (s *Server) testHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("order_id")
 
 	tmpl.Execute(w, id)
